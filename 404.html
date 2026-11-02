@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MuseumHop · moved</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<meta name="robots" content="noindex">
+<style>
+  :root{--ink:#183b35;--paper:#faf9f5;--muted:#4f5e58}
+  body{margin:0;min-height:100vh;display:grid;place-items:center;background:var(--paper);color:var(--ink);font:16px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif;padding:16px;box-sizing:border-box}
+  main{max-width:420px}
+  h1{font-size:28px;letter-spacing:-.6px;line-height:1.15;margin:16px 0 8px}
+  p{margin:0 0 16px;color:var(--muted)}
+  a{display:inline-block;background:var(--ink);color:#fffefb;padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:600}
+</style>
+</head>
+<body>
+<main>
+  <img src="/favicon.svg" width="48" height="48" alt="">
+  <h1>MuseumHopper is now MuseumHop</h1>
+  <p>Taking you to the new address. Your name, your nights and your plans come with you.</p>
+  <a id="go" href="https://museumhop.arian-shafa.xyz/">Continue to MuseumHop</a>
+</main>
+<script>
+  // Forwards to the new address. The first time, it also carries this browser's MuseumHopper storage (sign-in,
+  // nights, name, offline changes) in the address fragment, which never reaches a server. After that it only forwards,
+  // so an outdated copy of the sign-in is never sent again.
+  (function () {
+    var target = "https://museumhop.arian-shafa.xyz" + location.pathname.replace(/^\/museumhopper/, "") + location.search;
+    var hash = location.hash.slice(1);
+    try {
+      if (!localStorage.getItem("mh:moved")) {
+        var entries = {}, found = false;
+        for (var i = 0; i < localStorage.length; i++) {
+          var key = localStorage.key(i);
+          if (key.indexOf("museumhopper-auth") === 0 || key.indexOf("na:") === 0) { entries[key] = localStorage.getItem(key); found = true; }
+        }
+        if (found) {
+          var packed = btoa(unescape(encodeURIComponent(JSON.stringify(entries)))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+          hash = (hash ? hash + "&" : "") + "handoff=" + packed;
+        }
+        localStorage.setItem("mh:moved", "1");
+      }
+    } catch (e) { /* storage blocked: just forward */ }
+    var url = target + (hash ? "#" + hash : "");
+    document.getElementById("go").href = url;
+    location.replace(url);
+  })();
+</script>
+</body>
+</html>
