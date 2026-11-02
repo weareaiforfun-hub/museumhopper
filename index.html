@@ -25,12 +25,14 @@
 <script>
   // Forwards to the new address. The first time, it also carries this browser's MuseumHopper storage (sign-in,
   // nights, name, offline changes) in the address fragment, which never reaches a server. After that it only forwards,
-  // so an outdated copy of the sign-in is never sent again.
+  // so an outdated copy of the sign-in is never sent again, unless the new address asks (?pull=1): it only asks
+  // while it has no sign-in of its own, so there is nothing newer there to overwrite.
   (function () {
-    var target = "https://museumhop.arian-shafa.xyz" + location.pathname.replace(/^\/museumhopper/, "") + location.search;
+    var pulled = /[?&]pull=1/.test(location.search);
+    var target = "https://museumhop.arian-shafa.xyz" + location.pathname.replace(/^\/museumhopper/, "") + location.search.replace(/[?&]pull=1/, "").replace(/^&/, "?");
     var hash = location.hash.slice(1);
     try {
-      if (!localStorage.getItem("mh:moved")) {
+      if (pulled || !localStorage.getItem("mh:moved")) {
         var entries = {}, found = false;
         for (var i = 0; i < localStorage.length; i++) {
           var key = localStorage.key(i);
