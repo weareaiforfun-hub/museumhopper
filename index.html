@@ -47,7 +47,18 @@
     } catch (e) { /* storage blocked: just forward */ }
     var url = target + (hash ? "#" + hash : "");
     document.getElementById("go").href = url;
-    location.replace(url);
+    // Cookie-free stats (stats.arian-shafa.xyz): one page view and one "forward" event, without the address fragment
+    // (it holds the carried storage). Forwards as soon as both are sent, or after 800 ms at most.
+    var go = function () { location.replace(url); };
+    try {
+      if (localStorage.getItem("umami.disabled")) throw 0;
+      var base = { website: "66f795fe-4ad5-4cad-939e-35692e289d94", hostname: location.hostname, language: navigator.language, screen: screen.width + "x" + screen.height,
+        title: document.title, url: location.pathname + location.search.replace(/[?&]pull=1/, ""), referrer: document.referrer };
+      var send = function (payload) { return fetch("https://stats.arian-shafa.xyz/api/send", { method: "POST", keepalive: true, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "event", payload: payload }) }); };
+      var data = { kind: pulled ? "pull" : "visit", carried: hash.indexOf("handoff=") >= 0 };
+      var sent = Promise.all([send(base), send(Object.assign({}, base, { name: "forward", data: data }))]);
+      Promise.race([sent, new Promise(function (r) { setTimeout(r, 800); })]).then(go, go);
+    } catch (e) { go(); }
   })();
 </script>
 </body>
